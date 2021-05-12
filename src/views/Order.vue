@@ -1,6 +1,9 @@
 <template>
   <div>
-    <the-content>
+    <div class="reload" v-if="isShowReload">
+        <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+    </div>
+    <the-content v-else>
       <div class="content-top">
         <h2 class="title">Danh sách đơn hàng</h2>
         <button-option
@@ -9,6 +12,7 @@
           color="#fff"
           hoverColor="#fff"
           @click.native="isShowPopoverAdd = true"
+          style="padding: 10px"
         >
           <i class="fas fa-user-plus" style="margin-right: 5px"></i>
           Thêm đơn hàng
@@ -29,7 +33,7 @@
           ></i>
         </div>
 
-        <div class="btn-refresh">
+        <div class="btn-refresh" @click="ReloadPage">
           <a>
             <i class="fas fa-sync-alt"></i>
           </a>
@@ -41,18 +45,25 @@
           <thead>
             <tr>
               <th>Chọn</th>
-              <th>Tên danh mục</th>
+              <th>Đơn hàng</th>
+              <th>Ngày đặt</th>
+              <th>Trạng thái</th>
               <th>Tùy chọn</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="category in categories.data" :key="category.id">
+            <tr v-for="(order, index) in orders" :key="index">
               <td>
                 <input type="checkbox" />
               </td>
-              <td>{{ category.categoryName }}</td>
+              <td>{{ index }}</td>
+              <td>{{ order.orderDate}}</td>
+              <td>
+                <status-order :style="{color: '#fff', backgroundColor: '#2ecc71'}" v-if="order.status">Đã duyệt</status-order>
+                <status-order v-else>Chưa duyệt</status-order>
+              </td>
               <td style="display: flex">
-                <button-option
+                <button-option v-if="!order.status"
                   color="gray"
                   hoverColor="#fff"
                   bgColor="#ebebeb"
@@ -60,10 +71,10 @@
                   style="margin-right: 10px"
                   @click.native="
                     isShowPopoverEdit = true;
-                    categoryEdit = category;
+                    orderEdit = order;
                   "
                 >
-                  <span>Sửa</span>
+                  <div style="padding: 10px" @click="UpdateOrder(order)">Duyệt</div>
                 </button-option>
                 <button-option
                   color="#fff"
@@ -72,26 +83,16 @@
                   hoverBgColor="red"
                   @click.native="
                     isShowDeleteMessage = true;
-                    categoryDeleteId = category.categoryId;
+                    orderDeleteId = order.id;
                   "
                 >
-                  <span>Xóa</span>
+                  <div style="padding: 10px">Xóa</div>
                 </button-option>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <popover-edit
-        :isShow="isShowPopoverEdit"
-        :onHidden="HiddenPopoverEdit"
-        :category="categoryEdit"
-      ></popover-edit>
-      <popover-add
-        :isShow="isShowPopoverAdd"
-        :onHidden="HiddenPopoverAdd"
-        @add-status="AddCategory"
-      ></popover-add>
       <popup-warning
         title="Xóa khách hàng"
         detail="Bạn chắc chắn muốn xóa khách hàng này chứ ?"
@@ -104,9 +105,9 @@
           hoverBgColor="#FF4747"
           color="#fff"
           hoverColor="#fff"
-          @click.native="DeleteCategory"
+          @click.native="Deleteorder"
         >
-          <span>Xóa</span>
+          <div style="padding: 10px">Xóa</div>
         </button-option>
         <button-option
           style="margin-right: 10px"
@@ -115,12 +116,12 @@
           hoverColor="#fff"
           @click.native="HiddenPopupDeleteMessage"
         >
-          <span>Đóng</span>
+          <div style="padding: 10px">Đóng</div>
         </button-option>
       </popup-warning>
     </the-content>
-    <the-navigation :total="categories.count"
-      :totalPages="categories.totalPage"
+    <the-navigation :total="orders.count"
+      :totalPages="orders.totalPage"
       :currentPage="request.pageIndex"
       title="danh mục"
       @pagechanged="onPageChange"></the-navigation>
@@ -131,19 +132,19 @@
 import TheContent from '../components/layout/TheContent.vue'
 import TheNavigation from '../components/layout/TheNavigation.vue'
 import ButtonOption from '../components/common/Button'
-import PopoverEdit from '../components/category/components/PopoverEdit'
 import PopupWarning from '../components/common/PopupWarning'
-import PopoverAdd from '../components/category/components/AddCategory.vue'
+import StatusOrder from '../components/order/components/StatusOrder'
 export default {
   data () {
     return {
       search: '',
-      categories: [],
-      categoryEdit: null,
-      categoryDeleteId: null,
+      orders: [],
+      orderEdit: null,
+      orderDeleteId: null,
       isShowPopoverEdit: false,
       isShowPopoverAdd: false,
       isShowDeleteMessage: false,
+      isShowReload: false,
       request: {
         q: '',
         pageIndex: 1,
@@ -155,15 +156,14 @@ export default {
     TheContent,
     TheNavigation,
     ButtonOption,
-    PopoverEdit,
     PopupWarning,
-    PopoverAdd
+    StatusOrder
   },
   created () {
     this.axios
-      .get('/Categorys')
+      .get('/orders')
       .then((res) => {
-        this.categories = res.data
+        this.orders = res.data
       })
       .catch((e) => console.log(e))
   },
@@ -177,31 +177,62 @@ export default {
     HiddenPopupDeleteMessage () {
       this.isShowDeleteMessage = false
     },
-    DeleteCategory () {
+    Deleteorder () {
       this.isShowDeleteMessage = false
       this.axios
-        .delete('/Categorys/' + this.categoryDeleteId)
+        .delete('/orders/' + this.orderDeleteId)
         .then((res) => {
+          this.$notify({
+            group: 'foo',
+            title: 'Xóa thành công',
+            type: 'warn'
+          })
           console.log('Xoa thanh cong')
-          this.categories = this.categories.filter(
-            (category) => category.categoryId !== this.categoryDeleteId
+          this.orders = this.orders.filter(
+            (order) => order.id !== this.orderDeleteId
           )
         })
         .catch((e) => console.log(e))
     },
-    AddCategory (response) {
+    Addorder (response) {
       if (response.status === 201) {
         this.isShowPopoverAdd = false
         this.axios
-          .get('/Categorys')
+          .get('/orders')
           .then((res) => {
-            this.categories = res.data
+            this.orders = res.data
           })
           .catch((e) => console.log(e))
       }
     },
     onPageChange (page) {
       this.request.pageIndex = page
+    },
+    UpdateOrder (order) {
+      const updateOrder = order
+      updateOrder.status = 1
+      this.axios.put('/orders/' + order.id, updateOrder)
+        .then((res) => {
+          console.log(res)
+          this.$notify({
+            group: 'foo',
+            title: 'Duyệt thành công !',
+            type: 'success'
+          })
+        })
+        .catch(e => {
+          console.log(e)
+        })
+    },
+    ReloadPage () {
+      this.isShowReload = true
+      this.axios
+        .get('/orders')
+        .then((res) => {
+          this.orders = res.data
+          setTimeout(() => { this.isShowReload = false }, 2000)
+        })
+        .catch((e) => console.log(e))
     }
   },
   watch: {
@@ -212,10 +243,10 @@ export default {
       handler (val) {
         this.axios
           .get(
-            `/Categorys?q=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`
+            `/orders?q=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`
           )
           .then((res) => {
-            this.categories = res.data
+            this.orders = res.data
           })
           .catch((e) => console.log(e))
       },
@@ -226,4 +257,97 @@ export default {
 </script>
 
 <style>
+.lds-roller {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-roller div {
+  animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  transform-origin: 40px 40px;
+}
+.lds-roller div:after {
+  content: " ";
+  display: block;
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: gray;
+  margin: -4px 0 0 -4px;
+}
+.lds-roller div:nth-child(1) {
+  animation-delay: -0.036s;
+}
+.lds-roller div:nth-child(1):after {
+  top: 63px;
+  left: 63px;
+}
+.lds-roller div:nth-child(2) {
+  animation-delay: -0.072s;
+}
+.lds-roller div:nth-child(2):after {
+  top: 68px;
+  left: 56px;
+}
+.lds-roller div:nth-child(3) {
+  animation-delay: -0.108s;
+}
+.lds-roller div:nth-child(3):after {
+  top: 71px;
+  left: 48px;
+}
+.lds-roller div:nth-child(4) {
+  animation-delay: -0.144s;
+}
+.lds-roller div:nth-child(4):after {
+  top: 72px;
+  left: 40px;
+}
+.lds-roller div:nth-child(5) {
+  animation-delay: -0.18s;
+}
+.lds-roller div:nth-child(5):after {
+  top: 71px;
+  left: 32px;
+}
+.lds-roller div:nth-child(6) {
+  animation-delay: -0.216s;
+}
+.lds-roller div:nth-child(6):after {
+  top: 68px;
+  left: 24px;
+}
+.lds-roller div:nth-child(7) {
+  animation-delay: -0.252s;
+}
+.lds-roller div:nth-child(7):after {
+  top: 63px;
+  left: 17px;
+}
+.lds-roller div:nth-child(8) {
+  animation-delay: -0.288s;
+}
+.lds-roller div:nth-child(8):after {
+  top: 56px;
+  left: 12px;
+}
+@keyframes lds-roller {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.reload {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  transform: translateY(-50%);
+}
+
 </style>

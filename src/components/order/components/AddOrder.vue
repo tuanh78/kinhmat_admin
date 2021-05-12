@@ -3,7 +3,7 @@
     <div class="mask" @click="isShowPopup = true"></div>
     <div class="popover">
       <div class="popover-title">
-        <h2>Thêm đơn hàng</h2>
+        <h2>Thêm sản phẩm</h2>
       </div>
 
       <div class="product-input-top">

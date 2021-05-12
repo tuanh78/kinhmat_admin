@@ -3,7 +3,7 @@
     <div class="mask" @click="isShowPopup = true"></div>
     <div class="popover">
       <div class="popover-title">
-        <h2>Thêm đơn hàng</h2>
+        <h2>Thêm sản phẩm</h2>
       </div>
 
       <div class="product-input-top">
@@ -36,8 +36,18 @@
               name="product_category_id"
               id="productCategory"
             >
-              <option v-for="(category, index) in categories" :key="index" :value="category.categoryID">
-                {{ category.categoryName }}
+              <option value="18e54f45-7ad3-4884-970d-b8ce6f06907d">
+                Tiềm năng
+              </option>
+              <option value="18e54f45-7ad3-4884-970d-b8ce6f06907d">
+                Thân thiết
+              </option>
+              <option value="18e54f45-7ad3-4884-970d-b8ce6f06907d">Mới</option>
+              <option value="18e54f45-7ad3-4884-970d-b8ce6f06907d">
+                Lâu năm
+              </option>
+              <option value="18e54f45-7ad3-4884-970d-b8ce6f06907d">
+                Đối tác
               </option>
             </select>
           </div> -->
@@ -45,7 +55,7 @@
             <label for="productPhone">Giá</label>
             <input
               v-model="product.price"
-              type="number"
+              type="text"
               id="productPhone"
               name="product_phone"
             />
@@ -63,12 +73,6 @@
           </div>
           <input type="file" id="productUploadImage" name="avatar" hidden />
         </div> -->
-
-        <div class="product-image product-input-item">
-          <div class="error" v-for="(error, index) in errorsMess" :key="index">
-            {{ error }}
-          </div>
-        </div>
       </div>
 
       <div class="product-input-bottom">
@@ -79,14 +83,18 @@
             name="product-group"
             id="productGroup"
           >
-            <option v-for="(item, index) in suppliers" :key="index" :value="item.supplyId">{{item.supplyName}}</option>
+            <option value="1">Tiềm năng</option>
+            <option value="1">Thân thiết</option>
+            <option value="1">Mới</option>
+            <option value="1">Lâu năm</option>
+            <option value="1">Đối tác</option>
           </select>
         </div> -->
         <div class="product-input-item">
           <label for="productAmount">Số lượng</label>
           <input
             v-model="product.amount"
-            type="number"
+            type="text"
             id="productAmount"
             name="address"
           />
@@ -112,7 +120,7 @@
       </div>
 
       <div class="group-btn">
-        <a href="#" @click.prevent="SaveProduct" class="save-btn btn">Lưu</a>
+        <a href="#" @click.prevent="UpdateProduct" class="save-btn btn">Lưu</a>
         <a href="#" class="cancel-btn btn" @click="isShowPopup = true"
           >Hủy bỏ</a
         >
@@ -122,10 +130,6 @@
         <i class="far fa-times-circle"></i>
       </div>
     </div>
-
-    <!-- <status :styles="{backgroundColor: '#2ecc71', color: '#fff'}" v-if="isShowStatus">
-      Thêm sản phẩm thành công !
-    </status> -->
 
     <popup-warning
       title="Đóng Form thêm người dùng"
@@ -151,7 +155,7 @@
         hoverBgColor="gray"
         hoverColor="#fff"
         style="margin-right: 10px"
-        @click.native="HiddenPopupWarning"
+        @click.native="HiddenPopup"
       >
         <span>Giữ lại</span>
       </button-option>
@@ -162,7 +166,6 @@
 <script>
 import ButtonOption from '../../common/Button.vue'
 import PopupWarning from '../../common/PopupWarning.vue'
-// import Status from '../../common/Status.vue'
 // import Popup from '../../common/Popup'
 export default {
   props: {
@@ -172,123 +175,37 @@ export default {
     },
     onHidden: {
       type: Function
+    },
+    product: {
+      type: Object
     }
-  },
-  created () {
-    this.axios
-      .get('/Suppliers')
-      .then((res) => {
-        this.suppliers = res.data
-      })
-      .catch((e) => console.log(e))
-      .then(() => {
-        this.axios
-          .get(
-            '/Categorys'
-          )
-          .then((res) => {
-            this.categories = res.data
-          })
-          .catch((e) => console.log(e))
-      })
   },
   data () {
     return {
-      isShowPopup: false,
-      isShowStatus: false,
-      errorsMess: {
-        code: '',
-        name: '',
-        price: '',
-        amount: ''
-      },
-      product: {
-        code: '',
-        name: '',
-        // categoryId: null,
-        price: '',
-        // supplierId: null,
-        amount: ''
-        // color: '',
-        // meeterial: ''
-      },
-      categories: [],
-      suppliers: []
+      isShowPopup: false
     }
   },
   components: {
     PopupWarning,
     ButtonOption
-    // Status
     // Popup
   },
   methods: {
     HiddenPopup () {
       this.isShowPopup = false
-      this.product = {
-        code: '',
-        name: '',
-        price: '',
-        amount: ''
-      }
     },
-    HiddenPopupWarning () {
-      this.isShowPopup = false
-    },
-    SaveProduct () {
-      if (this.checkForm()) {
-        this.axios
-          .post('/Products', this.product)
-          .then((res) => {
-            this.onHidden()
-            this.$notify({
-              group: 'foo',
-              title: 'Thêm sản phẩm thành công',
-              type: 'success'
-            })
-            this.product = {
-              code: '',
-              name: '',
-              price: '',
-              amount: ''
-            }
+    UpdateProduct () {
+      this.axios
+        .put('/Products/' + this.product.id, this.product)
+        .then((res) => {
+          console.log('thanh cong')
+          this.$notify({
+            group: 'foo',
+            title: 'Cập nhật sản phẩm thành công',
+            type: 'success'
           })
-          .catch((e) => console.log(e))
-      }
-    },
-    checkForm: function (e) {
-      if (this.product.code === '') {
-        this.errorsMess.code = 'Mã sản phẩm không được để trống !'
-        return false
-      } else {
-        this.errorsMess.code = ''
-      }
-
-      if (this.product.name === '') {
-        this.errorsMess.name = 'Tên sản phẩm không được để trống !'
-        return false
-      } else {
-        this.errorsMess.name = ''
-      }
-
-      if (this.product.price === '') {
-        this.errorsMess.price = 'Giá sản phẩm không được để trống !'
-        return false
-      } else if (isNaN(Number(this.product.price))) {
-        this.errorsMess.price = 'Giá sản phẩm phải là một số !'
-      } else {
-        this.errorsMess.price = ''
-      }
-
-      if (this.product.amount === '') {
-        this.errorsMess.amount = 'Số lượng sản phẩm không được để trống !'
-        return false
-      } else if (isNaN(Number(this.product.amount))) {
-        this.errorsMess.amount = 'Số lượng sản phẩm phải là một số !'
-      } else {
-        this.errorsMess.amount = ''
-      }
-      return true
+        })
+        .catch((e) => console.log(e))
     }
   }
 }
@@ -488,11 +405,5 @@ export default {
   &:hover {
     color: $close-btn-hover-color;
   }
-}
-
-.error {
-  color: #e74c3c;
-  font-size: 13px;
-  margin-bottom: 10px;
 }
 </style>

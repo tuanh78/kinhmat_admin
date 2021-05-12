@@ -1,6 +1,9 @@
 <template>
   <div>
-    <the-content>
+    <div class="reload" v-if="isShowReload">
+        <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+    </div>
+    <the-content v-else>
       <div class="content-top">
         <h2 class="title">Danh sách nhà cung cấp</h2>
         <button-option
@@ -30,7 +33,7 @@
           ></i>
         </div>
 
-        <div class="btn-refresh">
+        <div class="btn-refresh" @click="ReloadPage">
           <a>
             <i class="fas fa-sync-alt"></i>
           </a>
@@ -140,7 +143,8 @@ export default {
       supplierDeleteId: null,
       isShowPopoverEdit: false,
       isShowPopoverAdd: false,
-      isShowDeleteMessage: false
+      isShowDeleteMessage: false,
+      isShowReload: false
 
     }
   },
@@ -200,6 +204,16 @@ export default {
           console.log(this.suppliers)
         })
         .catch((e) => console.log(e))
+    },
+    ReloadPage () {
+      this.idShowReload = true
+      this.axios.get('/Suppliers')
+        .then(res => {
+          this.isShowReload = true
+          this.suppliers = res.data
+          setTimeout(() => { this.isShowReload = false }, 2000)
+        })
+        .catch(e => console.log(e))
     }
   }
 }

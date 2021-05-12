@@ -138,7 +138,13 @@ export default {
       this.axios
         .put('/suppliers/' + this.supply.id, this.supply)
         .then((res) => {
+          this.onHidden()
           console.log('cap nhat thanh cong')
+          this.$notify({
+            group: 'foo',
+            title: 'Cập nhật thành công !',
+            type: 'success'
+          })
         })
         .catch((e) => console.log(e))
     }
