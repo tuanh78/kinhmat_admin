@@ -161,7 +161,7 @@ export default {
   },
   created () {
     this.axios
-      .get('/orders')
+      .get(`/orders/paging?q=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`)
       .then((res) => {
         this.orders = res.data
       })
@@ -255,7 +255,7 @@ export default {
       handler (val) {
         this.axios
           .get(
-            `/orders?q=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`
+            `/orders/paging?q=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`
           )
           .then((res) => {
             this.orders = res.data
