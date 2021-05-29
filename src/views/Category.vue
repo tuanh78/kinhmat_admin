@@ -1,9 +1,8 @@
 <template>
   <div>
     <div class="reload" v-if="isShowReload">
-        <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
     </div>
-    <the-content v-else>
+    <the-content>
       <div class="content-top">
         <h2 class="title">Danh sách danh mục</h2>
         <button-option
@@ -123,8 +122,8 @@
         </button-option>
       </popup-warning>
     </the-content>
-    <the-navigation :total="categories.count"
-      :totalPages="categories.totalPage"
+    <the-navigation :total="totalRecord"
+      :totalPages="total"
       :currentPage="request.pageIndex"
       title="danh mục"
       @pagechanged="onPageChange"></the-navigation>
@@ -153,7 +152,8 @@ export default {
         q: '',
         pageIndex: 1,
         pageSize: 5
-      }
+      },
+      totalRecord: 0
     }
   },
   components: {
@@ -166,9 +166,16 @@ export default {
   },
   created () {
     this.axios
-      .get('/Categorys')
+      .get(`/Categorys/paging?PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`)
       .then((res) => {
         this.categories = res.data
+      })
+      .catch((e) => console.log(e))
+
+    this.axios
+      .get('/Categorys/total')
+      .then((res) => {
+        this.totalRecord = res.data
       })
       .catch((e) => console.log(e))
   },
@@ -216,7 +223,7 @@ export default {
     ReloadPage () {
       this.isShowReload = true
       this.axios
-        .get('/Categorys')
+        .get(`/Categorys/paging?PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`)
         .then((res) => {
           this.categories = res.data
           setTimeout(() => { this.isShowReload = false }, 2000)
@@ -224,15 +231,26 @@ export default {
         .catch((e) => console.log(e))
     }
   },
+  computed: {
+    total () {
+      return Math.ceil(this.totalRecord / this.request.pageSize)
+    }
+  },
   watch: {
     'request.q' () {
       this.request.pageIndex = 1
+      this.axios
+        .get(`/Categorys/paging/total?Filter=${this.request.q}`)
+        .then((res) => {
+          this.totalRecord = res.data
+        })
+        .catch((e) => console.log(e))
     },
     request: {
       handler (val) {
         this.axios
           .get(
-            `/Categorys?q=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`
+            `/Categorys/paging?PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}&Filter=${this.request.q}`
           )
           .then((res) => {
             this.categories = res.data
@@ -337,5 +355,9 @@ export default {
   left: 50%;
   transform: translateX(-50%);
   transform: translateY(-50%);
+  width: 100px;
+  height: 100px;
+  background-image: url('../assets/images/logo/Spinner-1s-200px.gif');
+  background-size: contain;
 }
 </style>

@@ -60,9 +60,10 @@ export default {
 .navbar {
   width: 226px;
   height: 100vh;
-  border-right: 2px solid $table-cell-color;
+  border-right: 2px solid white;
   position: sticky;
   top: 0;
+  background-color: #2c3e50;
 }
 .logo-toggle {
   display: flex;
@@ -79,7 +80,7 @@ export default {
   .toggle {
     width: 24px;
     height: 24px;
-    background-image: url("../../assets/content/img/avatar.jpg");
+    background-image: url("../../assets/content/img/avatar-luffy.jpg");
     background-repeat: no-repeat;
     background-size: contain;
     margin-right: 10px;
@@ -89,7 +90,7 @@ export default {
   .logo {
     width: calc(100% - 34px);
     height: 24px;
-    background-image: url("../../assets/content/img/avatar.jpg");
+    background-image: url("../../assets/images/logo/favicon.png");
     background-repeat: no-repeat;
     background-size: contain;
   }

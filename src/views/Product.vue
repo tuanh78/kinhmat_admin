@@ -1,9 +1,7 @@
 <template>
   <div>
-    <div class="reload" v-if="isShowReload">
-        <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-    </div>
-    <the-content v-else>
+    <div class="reload" v-if="isShowReload"></div>
+    <the-content>
       <div class="content-top">
         <h2 class="title">Danh sách sản phẩm</h2>
         <button-option
@@ -134,9 +132,10 @@
       </popup-warning>
     </the-content>
     <the-navigation
-      :total="products.count"
-      :totalPages="products.totalPage"
+      :total="totalRecord"
+      :totalPages="total"
       :currentPage="request.pageIndex"
+      :maxVisibleButtons="3"
       title="sản phẩm"
       @pagechanged="onPageChange"
     ></the-navigation>
@@ -166,7 +165,8 @@ export default {
         q: '',
         pageIndex: 1,
         pageSize: 5
-      }
+      },
+      totalRecord: 0
     }
   },
   components: {
@@ -180,9 +180,15 @@ export default {
   },
   created () {
     this.axios
-      .get('/Products')
+      .get(`/Products/paging?Filter=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`)
       .then((res) => {
         this.products = res.data
+      })
+      .catch((e) => console.log(e))
+    this.axios
+      .get('/Products/total')
+      .then((res) => {
+        this.totalRecord = res.data
       })
       .catch((e) => console.log(e))
   },
@@ -228,7 +234,7 @@ export default {
     ReloadPage () {
       this.isShowReload = true
       this.axios
-        .get('/Products')
+        .get(`/Products/paging?Filter=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`)
         .then((res) => {
           this.products = res.data
           setTimeout(() => { this.isShowReload = false }, 2000)
@@ -237,15 +243,26 @@ export default {
     }
 
   },
+  computed: {
+    total () {
+      return Math.ceil(this.totalRecord / this.request.pageSize)
+    }
+  },
   watch: {
     'request.q' () {
       this.request.pageIndex = 1
+      this.axios
+        .get(`/Products/total?Filter=${this.request.q}`)
+        .then((res) => {
+          this.totalRecord = res.data
+        })
+        .catch((e) => console.log(e))
     },
     request: {
       handler (val) {
         this.axios
           .get(
-            `/Products?q=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`
+            `/Products/paging?Filter=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`
           )
           .then((res) => {
             this.products = res.data
@@ -350,5 +367,9 @@ export default {
   left: 50%;
   transform: translateX(-50%);
   transform: translateY(-50%);
+  width: 100px;
+  height: 100px;
+  background-image: url('../assets/images/logo/Spinner-1s-200px.gif');
+  background-size: contain;
 }
 </style>

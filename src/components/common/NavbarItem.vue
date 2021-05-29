@@ -48,6 +48,7 @@ export default {
     background-repeat: no-repeat;
     margin-right: 5px;
     text-decoration: none;
+    color: white;
   }
 
   a {
@@ -58,7 +59,7 @@ export default {
   }
 
   .router-link-exact-active {
-    background-color: $default-color;
+    background-color: #f39c12;
     color: $white-color;
   }
 
@@ -68,6 +69,10 @@ export default {
     align-items: center;
     height: 44px;
     padding: 0 16px;
+
+    span {
+      color: white;
+    }
   }
 
 }

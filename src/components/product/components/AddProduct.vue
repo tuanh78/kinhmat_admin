@@ -252,6 +252,7 @@ export default {
               price: '',
               amount: ''
             }
+            this.onHidden()
           })
           .catch((e) => console.log(e))
       }

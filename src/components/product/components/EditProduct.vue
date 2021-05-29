@@ -3,7 +3,7 @@
     <div class="mask" @click="isShowPopup = true"></div>
     <div class="popover">
       <div class="popover-title">
-        <h2>Thêm sản phẩm</h2>
+        <h2>Sửa sản phẩm</h2>
       </div>
 
       <div class="product-input-top">
@@ -204,6 +204,8 @@ export default {
             title: 'Cập nhật sản phẩm thành công',
             type: 'success'
           })
+
+          this.isShow = false
         })
         .catch((e) => console.log(e))
     }

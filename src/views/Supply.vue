@@ -1,9 +1,8 @@
 <template>
   <div>
     <div class="reload" v-if="isShowReload">
-        <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
     </div>
-    <the-content v-else>
+    <the-content>
       <div class="content-top">
         <h2 class="title">Danh sách nhà cung cấp</h2>
         <button-option
@@ -123,7 +122,14 @@
         </button-option>
       </popup-warning>
     </the-content>
-    <the-navigation></the-navigation>
+    <the-navigation
+      :total="totalRecord"
+      :totalPages="total"
+      :currentPage="request.pageIndex"
+      :maxVisibleButtons="3"
+      title="nhà cung cấp"
+      @pagechanged="onPageChange"
+    ></the-navigation>
   </div>
 </template>
 
@@ -144,7 +150,13 @@ export default {
       isShowPopoverEdit: false,
       isShowPopoverAdd: false,
       isShowDeleteMessage: false,
-      isShowReload: false
+      isShowReload: false,
+      request: {
+        q: '',
+        pageIndex: 1,
+        pageSize: 5
+      },
+      totalRecord: 0
 
     }
   },
@@ -156,12 +168,55 @@ export default {
     PopupWarning,
     PopoverAdd
   },
+  computed: {
+    total () {
+      return Math.ceil(this.totalRecord / this.request.pageSize)
+    }
+  },
   created () {
-    this.axios.get('/Suppliers')
+    this.axios.get(`/Suppliers/paging?PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}&Filter=${this.request.q}`)
       .then(res => {
         this.suppliers = res.data
       })
       .catch(e => console.log(e))
+
+    this.axios
+      .get('/Suppliers/total')
+      .then((res) => {
+        this.totalRecord = res.data
+      })
+      .catch((e) => console.log(e))
+  },
+  watch: {
+    'request.q' () {
+      this.request.pageIndex = 1
+      this.axios
+        .get(`/Suppliers/total?Filter=${this.request.q}`)
+        .then((res) => {
+          this.totalRecord = res.data
+        })
+        .catch((e) => console.log(e))
+    },
+    request: {
+      handler (val) {
+        this.axios
+          .get(
+            `/Suppliers/paging?Filter=${this.request.q}&PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}`
+          )
+          .then((res) => {
+            this.suppliers = res.data
+          })
+          .catch((e) => console.log(e))
+      },
+      deep: true
+    },
+    search () {
+      this.axios.get(`/Suppliers/paging?PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}&Filter=${this.search}`)
+        .then(res => {
+          this.suppliers = res.data
+        })
+        .catch(e => console.log(e))
+    }
   },
   methods: {
     HiddenPopoverEdit () {
@@ -207,13 +262,16 @@ export default {
     },
     ReloadPage () {
       this.idShowReload = true
-      this.axios.get('/Suppliers')
+      this.axios.get(`/Suppliers/paging?PageIndex=${this.request.pageIndex}&PageSize=${this.request.pageSize}&Filter=${this.request.q}`)
         .then(res => {
           this.isShowReload = true
           this.suppliers = res.data
           setTimeout(() => { this.isShowReload = false }, 2000)
         })
         .catch(e => console.log(e))
+    },
+    onPageChange (page) {
+      this.request.pageIndex = page
     }
   }
 }

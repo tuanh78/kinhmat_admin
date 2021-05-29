@@ -110,7 +110,8 @@ export default
     }
   }
   .user-list {
-    min-height: 60vh;
+    height: 60vh;
+    overflow: auto;
     &-table {
       width: 100%;
       text-align: left;
